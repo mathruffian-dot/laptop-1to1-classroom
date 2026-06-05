@@ -204,7 +204,51 @@
         style="width:80%; margin-top:18px; accent-color:var(--accent2);">
     </section>
 
-    <!-- 4. 路線圖 ICON -->
+    <!-- 4. 畢氏定理互動展示（弦圖重排動畫） -->
+    <section id="slide-pythagoras">
+      <h2>動手玩：畢氏定理為什麼成立？</h2>
+      <p style="font-size:0.44em; color:#aaa; margin:0.1em 0 0.5em;">
+        拖曳滑桿，看 4 個一樣的直角三角形重新排列 ——
+        空白面積從 <b style="color:var(--accent)">c²</b> 變成
+        <b style="color:var(--success)">a²</b>＋<b style="color:var(--warn)">b²</b>，三角形面積始終不變
+      </p>
+      <div style="display:grid; grid-template-columns:auto 1fr; gap:30px; align-items:center;">
+        <svg id="pyth-svg" viewBox="-22 -22 338 360" style="width:340px; height:auto;">
+          <!-- 空白區域高亮（底層） -->
+          <polygon id="pyth-gap-c" points="" fill="rgba(232,100,58,0.32)" stroke="var(--accent)" stroke-width="1.5"/>
+          <polygon id="pyth-gap-a" points="" fill="rgba(129,199,132,0.32)" stroke="var(--success)" stroke-width="1.5"/>
+          <polygon id="pyth-gap-b" points="" fill="rgba(255,183,77,0.30)" stroke="var(--warn)" stroke-width="1.5"/>
+          <!-- 區域文字 -->
+          <text id="pyth-lbl-c" x="147" y="156" text-anchor="middle" font-size="28" font-weight="800" fill="#fff">c²</text>
+          <text id="pyth-lbl-a" x="63"  y="74"  text-anchor="middle" font-size="20" font-weight="800" fill="#fff">a²</text>
+          <text id="pyth-lbl-b" x="210" y="219" text-anchor="middle" font-size="24" font-weight="800" fill="#fff">b²</text>
+          <!-- 四個直角三角形（上層） -->
+          <polygon id="pyth-t1" points="" fill="rgba(79,195,247,0.5)"  stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+          <polygon id="pyth-t2" points="" fill="rgba(79,195,247,0.5)"  stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+          <polygon id="pyth-t3" points="" fill="rgba(79,195,247,0.5)"  stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+          <polygon id="pyth-t4" points="" fill="rgba(79,195,247,0.5)"  stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+          <!-- 外框 -->
+          <rect x="0" y="0" width="294" height="294" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2"/>
+        </svg>
+        <div>
+          <div style="font-size:0.46em; color:#bbb; margin-bottom:14px;">
+            以 <b style="color:var(--success)">a＝3</b>、<b style="color:var(--warn)">b＝4</b>、<b style="color:var(--accent)">c＝5</b> 的直角三角形為例
+          </div>
+          <div style="font-size:0.95em; font-weight:800; letter-spacing:0.02em;">
+            <span style="color:var(--success)">a²</span>　＋　<span style="color:var(--warn)">b²</span>　＝　<span style="color:var(--accent)">c²</span>
+          </div>
+          <div style="font-size:0.62em; color:#ccc; margin-top:8px;">
+            9　＋　16　＝　25
+          </div>
+          <div id="pyth-note" style="font-size:0.42em; color:#999; margin-top:20px; line-height:1.8;
+                                     border-left:3px solid var(--accent2); padding-left:14px;"></div>
+        </div>
+      </div>
+      <input id="pyth-slider" type="range" min="0" max="100" value="0"
+        style="width:78%; margin-top:16px; accent-color:var(--accent2);">
+    </section>
+
+    <!-- 5. 路線圖 ICON -->
     <section>
       <h2>今天兩小時，走這三段</h2>
       <div class="timeline">
@@ -412,6 +456,63 @@
       document.getElementById('viz-divider').style.left = v + '%';
     });
   }
+
+  // 畢氏定理弦圖重排動畫
+  (function() {
+    const U = 42;
+    const a = 3 * U, b = 4 * U, s = 7 * U; // 126, 168, 294
+    // 每個三角形：source 三頂點（右角點 R、leg a 端點、leg b 端點）、旋轉中心 rc(=R)、總旋轉角 deg、總平移 d
+    const tris = [
+      { id: 'pyth-t1', pts: [[0, 0], [a, 0], [0, b]], rc: [0, 0], deg: 0,   d: [0, a] },
+      { id: 'pyth-t2', pts: [[s, 0], [s, a], [a, 0]], rc: [s, 0], deg: 0,   d: [0, 0] },
+      { id: 'pyth-t3', pts: [[s, s], [b, s], [s, a]], rc: [s, s], deg: 90,  d: [-b, -b] },
+      { id: 'pyth-t4', pts: [[0, s], [0, b], [b, s]], rc: [0, s], deg: -90, d: [a, 0] },
+    ];
+
+    function poseTri(tri, t) {
+      const rad = tri.deg * Math.PI / 180 * t;
+      const cs = Math.cos(rad), sn = Math.sin(rad);
+      const [cx, cy] = tri.rc;
+      return tri.pts.map(([x, y]) => {
+        const dx = x - cx, dy = y - cy;
+        const rx = cx + dx * cs - dy * sn + tri.d[0] * t;
+        const ry = cy + dx * sn + dy * cs + tri.d[1] * t;
+        return rx.toFixed(2) + ',' + ry.toFixed(2);
+      }).join(' ');
+    }
+
+    function pythUpdate(t) {
+      tris.forEach(tr => {
+        const el = document.getElementById(tr.id);
+        if (el) el.setAttribute('points', poseTri(tr, t));
+      });
+      const set = (id, op) => { const e = document.getElementById(id); if (e) e.style.opacity = op; };
+      set('pyth-gap-c', 1 - t); set('pyth-lbl-c', 1 - t);
+      set('pyth-gap-a', t);     set('pyth-lbl-a', t);
+      set('pyth-gap-b', t);     set('pyth-lbl-b', t);
+      const note = document.getElementById('pyth-note');
+      if (note) note.innerHTML = t < 0.5
+        ? '此時空白處是 <b style="color:var(--accent)">一個大正方形</b><br>面積 ＝ <b style="color:var(--accent)">c² ＝ 25</b>'
+        : '空白處變成 <b style="color:var(--success)">兩個小正方形</b><br>面積 ＝ <b style="color:var(--success)">a²</b> ＋ <b style="color:var(--warn)">b²</b> ＝ 9 ＋ 16 ＝ <b>25</b>';
+    }
+
+    function pythInit() {
+      const gapC = document.getElementById('pyth-gap-c');
+      if (!gapC) return;
+      gapC.setAttribute('points', '126,0 294,126 168,294 0,168');         // 內接斜正方形 c²
+      document.getElementById('pyth-gap-a').setAttribute('points', '0,0 126,0 126,126 0,126');         // 左上 a²
+      document.getElementById('pyth-gap-b').setAttribute('points', '126,126 294,126 294,294 126,294'); // 右下 b²
+      const sl = document.getElementById('pyth-slider');
+      sl.addEventListener('input', () => pythUpdate(+sl.value / 100));
+      pythUpdate(0);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', pythInit);
+    } else {
+      pythInit();
+    }
+  })();
 </script>
 
 <!-- 文字雲 Firebase -->
