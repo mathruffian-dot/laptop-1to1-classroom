@@ -184,15 +184,15 @@
       <h2>核心轉變：老師的角色變了</h2>
       <p style="font-size:0.5em; color:#aaa; margin:0.2em 0 0.6em;">拖曳滑桿，看老師從「台上講」變成「走動指導」</p>
       <div style="position:relative; height:360px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
-        <div id="viz-before" style="position:absolute;inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,183,77,0.08);">
-          <div style="font-size:0.55em; color:var(--warn); font-weight:800; letter-spacing:0.05em;">傳統教室</div>
-          <div style="font-size:0.42em; color:#ccc; line-height:2; margin-top:14px; text-align:center;">
+        <div id="viz-before" style="position:absolute;inset:0; clip-path:inset(0 0 0 0); display:flex; flex-direction:column; align-items:flex-end; justify-content:center; padding-right:5%; background:rgba(255,183,77,0.1);">
+          <div style="font-size:0.55em; color:var(--warn); font-weight:800; letter-spacing:0.05em; text-align:right; max-width:44%;">傳統教室</div>
+          <div style="font-size:0.42em; color:#ccc; line-height:2; margin-top:14px; text-align:right; max-width:44%;">
             老師站講台、單向講述<br>學生被動聽、難看到每個人<br>只有舉手的人有反應
           </div>
         </div>
-        <div id="viz-after" style="position:absolute;inset:0; clip-path:inset(0 100% 0 0); display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(79,195,247,0.1);">
-          <div style="font-size:0.55em; color:var(--accent2); font-weight:800; letter-spacing:0.05em;">1:1 筆電教室</div>
-          <div style="font-size:0.42em; color:#fff; line-height:2; margin-top:14px; text-align:center;">
+        <div id="viz-after" style="position:absolute;inset:0; clip-path:inset(0 100% 0 0); display:flex; flex-direction:column; align-items:flex-start; justify-content:center; padding-left:5%; background:rgba(79,195,247,0.12);">
+          <div style="font-size:0.55em; color:var(--accent2); font-weight:800; letter-spacing:0.05em; text-align:left; max-width:44%;">1:1 筆電教室</div>
+          <div style="font-size:0.42em; color:#fff; line-height:2; margin-top:14px; text-align:left; max-width:44%;">
             老師派任務、在學生間走動指導<br>螢幕即時收到「每個人」的答案<br>全班都動手、都被看見
           </div>
         </div>
@@ -405,7 +405,10 @@
   if (vizSlider) {
     vizSlider.addEventListener('input', function() {
       const v = +this.value;
+      // 上層（1:1 教室）：只顯示分隔線左側
       document.getElementById('viz-after').style.clipPath = `inset(0 ${100-v}% 0 0)`;
+      // 下層（傳統教室）：跟著被裁掉左側，只顯示分隔線右側，避免兩層文字重疊
+      document.getElementById('viz-before').style.clipPath = `inset(0 0 0 ${v}%)`;
       document.getElementById('viz-divider').style.left = v + '%';
     });
   }
